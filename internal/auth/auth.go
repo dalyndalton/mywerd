@@ -5,11 +5,10 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
-
-	"log"
 
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
@@ -19,15 +18,27 @@ import (
 var db *sql.DB
 
 func initDB() {
+	logrus.Info("Starting the server")
+
 	var err error
-	db_url := "postgres://postgres:password@localhost:5432/werd?sslmode=disable"
+	postgresPassword := os.Getenv("POSTGRES_PASSWORD")
+	postgresURL := os.Getenv("DATABASE_URL")
+	if postgresURL == "" {
+		logrus.Info("POSTGRES_URL not set, using default")
+		postgresURL = "localhost:5432"
+	}
+	if postgresPassword == "" {
+		postgresPassword = "postgres_password"
+	}
+	db_url := fmt.Sprintf("postgres://postgres:%s@%s/werd?sslmode=disable", postgresPassword, postgresURL)
+	logrus.Info("DB_URL: ", db_url)
 	if envPath := os.Getenv("DB_URL"); envPath != "" {
 		db_url = envPath
 	}
 
 	db, err = sql.Open("postgres", db_url)
 	if err != nil {
-		log.Fatal("Failed to connect to the database:", err)
+		logrus.Fatalf("Failed to connect to the database: %v, URL: %s", err, db_url)
 	}
 
 	db.SetMaxOpenConns(25)

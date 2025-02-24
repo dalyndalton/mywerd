@@ -10,18 +10,15 @@ import (
 )
 
 func main() {
-
 	debug := flag.Bool("debug", false, "enable debug mode")
 	flag.Parse()
-
-	mux := http.NewServeMux()
-
-	logrus.SetReportCaller(true)
 
 	if *debug {
 		logrus.SetLevel(logrus.DebugLevel)
 		logrus.Debug("Debug mode enabled")
 	}
+
+	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, World!"))

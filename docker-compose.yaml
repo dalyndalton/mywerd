@@ -5,13 +5,25 @@ services:
       - "8080:8080"
     depends_on:
       - db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app.rule=Host(`mywerd.dev`)"
+      - "traefik.http.routers.app.entrypoints=web"
+      - "traefik.http.services.app.loadbalancer.server.port=8080"
+    environment:
+      - DATABASE_URL=db:5432
+    restart: on-failure
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
 
   db:
     image: postgres:latest
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydatabase
+      POSTGRES_PASSWORD: postgres_password
+      POSTGRES_DATABASE: postgres
     ports:
       - "5432:5432"
     volumes:
@@ -22,6 +34,22 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+
+  reverse-proxy:
+    image: traefik:3.3
+    command:
+      - "--log.level=INFO"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.web.address=:4000"
+    ports:
+      - "80:80"
+      - "8090:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    profiles:
+      - traefik
 
 volumes:
   postgres_data:

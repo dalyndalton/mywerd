@@ -22,10 +22,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy the binary from the build stage
-COPY --from=build /app/myapp .
-
-# Set the timezone and install CA certificates
-RUN apk --no-cache add ca-certificates tzdata
+COPY --from=builder /app/myapp .
 
 # Set the entrypoint command
 ENTRYPOINT ["/app/myapp"]
