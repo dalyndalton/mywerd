@@ -1,16 +1,6 @@
-# Stage 1: Build stage
-FROM golang:1.24 AS builder
-
-WORKDIR /app
-
-COPY go.mod go.sum ./
-RUN go mod download
-
-COPY . .
-RUN GOOS=linux go build -o myapp .
-
 FROM ubuntu:24.04
 
+ARG BINARY
 
 RUN apt-get update && apt-get install -y \
     tzdata \
@@ -21,8 +11,8 @@ RUN apt-get update && apt-get install -y \
 # Set the working directory
 WORKDIR /app
 
-# Copy the binary from the build stage
-COPY --from=builder /app/myapp .
+# Copy the binary into the image
+COPY ${BINARY} /app/myapp
 
 # Set the entrypoint command
 ENTRYPOINT ["/app/myapp"]
